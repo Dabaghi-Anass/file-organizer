@@ -25,7 +25,7 @@ class SmartFileOrganizer(FileSystemEventHandler):
             'Presentations': ['.ppt', '.pptx', '.odp', '.key'],
             'Code': ['.py', '.js', '.html', '.css', '.java', '.cpp', '.c', '.h', 
                     '.php', '.rb', '.go', '.rs', '.ts', '.jsx', '.tsx', '.vue', 
-                    '.swift', '.kt', '.sql', '.sh', '.bash', '.json', '.xml', '.yaml', '.yml'],
+                    '.swift', '.kt', '.sql', '.sh', '.bash', '.json', '.xml', '.yaml', '.yml', ".ipynb"],
             'Archives': ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz'],
             'Executables': ['.exe', '.msi', '.app', '.dmg', '.deb', '.rpm'],
             'Databases': ['.db', '.sqlite', '.sql', '.mdb'],
@@ -58,7 +58,6 @@ class SmartFileOrganizer(FileSystemEventHandler):
             response = model.generate_content(prompt)
             category = response.text.strip()
             
-            # Validate the category
             valid_categories = list(self.categories.keys()) + [
                 'Design', '3D Models', 'Ebooks', 'Notes', 'Scripts', 
                 'Configuration', 'Logs', 'Backups', 'Temporary', 'Other'
@@ -77,12 +76,10 @@ class SmartFileOrganizer(FileSystemEventHandler):
         """Determine file category based on extension or AI"""
         ext = os.path.splitext(file_path)[1].lower()
         
-        # Check predefined categories
         for category, extensions in self.categories.items():
             if ext in extensions:
                 return category
         
-        # Use AI for unknown files
         return self.get_ai_category(file_path)
     
     def organize_file(self, file_path):
@@ -91,22 +88,17 @@ class SmartFileOrganizer(FileSystemEventHandler):
             if not os.path.exists(file_path):
                 return
             
-            # Skip if it's a directory or hidden file
             if os.path.isdir(file_path) or os.path.basename(file_path).startswith('.'):
                 return
             
-            # Get category
             category = self.get_category(file_path)
             
-            # Create category folder if it doesn't exist
             category_folder = self.watch_folder / category
             category_folder.mkdir(exist_ok=True)
             
-            # Move file
             file_name = os.path.basename(file_path)
             destination = category_folder / file_name
             
-            # Handle duplicate names
             counter = 1
             while destination.exists():
                 name, ext = os.path.splitext(file_name)
@@ -122,7 +114,7 @@ class SmartFileOrganizer(FileSystemEventHandler):
     def on_created(self, event):
         """Handle new file creation"""
         if not event.is_directory:
-            time.sleep(1)  # Wait for file to be fully written
+            time.sleep(1)
             self.organize_file(event.src_path)
     
     def on_modified(self, event):
@@ -146,7 +138,7 @@ def main():
     Path(WATCH_FOLDER).mkdir(exist_ok=True)
     
     print("=" * 60)
-    print("🤖 Smart File Organizer with Gemini AI")
+    print("Smart File Organizer with Gemini AI")
     print("=" * 60)
     print(f"📁 Monitoring: {os.path.abspath(WATCH_FOLDER)}")
     print("🔧 Press Ctrl+C to stop")
